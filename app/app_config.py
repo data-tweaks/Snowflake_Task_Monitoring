@@ -40,7 +40,7 @@ def snowpark_session_create():
 
 session = snowpark_session_create() 
 
-def load_sql_file(file, session ):
+def load_Procedures_from_file(file, session ):
   with open(file, 'r') as f:
       sql_statements = f.read() 
   try:
@@ -49,9 +49,9 @@ def load_sql_file(file, session ):
       st.error(f"Error executing SQL file: {e}")
   session.close()
 
-def load_sql_file(file, session , delimiter  ):
+def load_sql_file(file, session  ):
     with open(file, 'r') as f:
-        sql_statements = f.read().split(delimiter)
+        sql_statements = f.read().split(';')
 
     for statement in sql_statements:
         if statement.strip():
@@ -64,8 +64,8 @@ st.write("Before proceeding to review the analysis on **Summary**, **Task Cost**
 st.write("\n\n")
 
 load_sql_file(os.path.join("app", "create tables.sql"), session , ';' ) 
-load_sql_file(os.path.join("app", "create_procedure_init_analyse.sql"), session ) 
-load_sql_file(os.path.join("app", "create_procedure_insert_query_stats.sql"), session ) 
+load_Procedures_from_file(os.path.join("app", "create_procedure_init_analyse.sql"), session ) 
+load_Procedures_from_file(os.path.join("app", "create_procedure_insert_query_stats.sql"), session ) 
 st.write("Tablolar olusturuldu")
 
 with stylable_container(
