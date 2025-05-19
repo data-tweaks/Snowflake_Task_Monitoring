@@ -56,7 +56,7 @@ st.write("Before proceeding to review the analysis on **Summary**, **Task Cost**
 st.write("\n\n")
 
 
-load_sql_file("setup_reas_app.sql", session ) 
+load_sql_file(os.path.join("app", "setup_reas_app.sql"), session ) 
 st.write("Tablolar olusturuldu")
 
 with stylable_container(
