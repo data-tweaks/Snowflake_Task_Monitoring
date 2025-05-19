@@ -48,14 +48,24 @@ def load_sql_file(file, session ):
   except Exception as e:
       st.error(f"Error executing SQL file: {e}")
   session.close()
+
+def load_sql_file(file, session , delimiter  ):
+    with open(file, 'r') as f:
+        sql_statements = f.read().split(delimiter)
+
+    for statement in sql_statements:
+        if statement.strip():
+            session.sql(statement).collect()
+    session.close()
   
 
 st.header(f" **:grey[CONFIGURATION]**")
 st.write("Before proceeding to review the analysis on **Summary**, **Task Cost** and **Health Check**; click **Configure & Run Analysis** button and configure the REAS TASK analyses app.")
 st.write("\n\n")
 
-
-load_sql_file(os.path.join("app", "setup_reas_app.sql"), session ) 
+load_sql_file(os.path.join("app", "create tables.sql"), session , ';' ) 
+load_sql_file(os.path.join("app", "create_procedure_init_analyse.sql"), session ) 
+load_sql_file(os.path.join("app", "create_procedure_insert_query_stats.sql"), session ) 
 st.write("Tablolar olusturuldu")
 
 with stylable_container(
