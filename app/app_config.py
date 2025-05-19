@@ -1,8 +1,12 @@
-import streamlit as st 
-from streamlit_extras.stylable_container import stylable_container
-from snowflake.snowpark.context import get_active_session
 import pandas as pd 
 import time
+import toml
+import os
+
+from snowflake.snowpark.session import Session 
+
+import streamlit as st 
+from streamlit_extras.stylable_container import stylable_container
 
 
 page_element="""
@@ -17,72 +21,24 @@ page_element="""
 st.markdown(page_element, unsafe_allow_html=True)
  
 
-def  get_taskState_old(session) : 
-    databases_df = session.sql('show databases;' ).collect()
-    databases_df = pd.DataFrame(databases_df)
+def snowpark_session_create(): 
+ 
+    config = toml.load("app/config/connections.toml")
+    connConfig = config["aiGround"]
 
-    databases_df = databases_df[databases_df["kind"] != 'IMPORTED DATABASE']
+    connection_params = {
+        "user" : st.secrets["user"],   
+        "password": st.secrets["password"],
+        "account" : st.secrets["account"],
+        "warehouse" : connConfig.get("warehouse"),
+        "role" : connConfig.get("role"),
+    }
 
-    for database_name_v in databases_df["name"] : 
-        session.sql(f''' use database  { database_name_v } ;  ''') 
-        tasks_df = session.sql(f''' show tasks in database  { database_name_v } ;  ''' ).collect() 
-        tasks_df = pd.DataFrame(tasks_df)
-        if len(tasks_df.index) > 0 :       
-            tasks_df = tasks_df[[ "created_on", 
-                                  "database_name" ,
-                                  "schema_name", 
-                                  "name" , 
-                                  "id", 
-                                  "state", 
-                                  "error_integration", 
-                                  "schedule", 
-                                  "owner", 
-                                  "last_suspended_on",
-                                  "last_suspended_reason"]]
-            
-            row_iter = 0 
-             
-            for row in tasks_df.iterrows():
-                t_created_on_v = tasks_df["created_on"][row_iter].date()
-                t_database_name_v = tasks_df["database_name"][row_iter]
-                t_schema_name_v = tasks_df["schema_name"][row_iter]
-                t_name_v = tasks_df["name"][row_iter]
-                t_id_v = tasks_df["id"][row_iter]
-                t_state_v = tasks_df["state"][row_iter]
-                t_error_integration_v = tasks_df["error_integration"][row_iter]
-                t_schedule_v = tasks_df["schedule"][row_iter]
-                t_owner_v = tasks_df["owner"][row_iter]
-                t_last_suspended_on_v = tasks_df["last_suspended_on"][row_iter].date()
-                t_last_suspended_reason_v = tasks_df["last_suspended_reason"][row_iter]
-                row_iter = row_iter + 1 
-
-                merge_sql_v = f'''  merge into core.task_state taskSt
-                                      using 
-                                    (select  '{t_created_on_v}' as created_on, '{t_database_name_v}' as database_name, 
-                                       '{t_schema_name_v}' as schema_name, 
-                                       '{t_name_v}' as name, '{t_id_v}' as id,  '{t_state_v}' as state, 
-                                       '{t_error_integration_v}' as error_integration , 
-                                       '{t_schedule_v}' as schedule, '{t_owner_v}' as owner, 
-                                       '{t_last_suspended_on_v}' as last_suspended_on, 
-                                       '{t_last_suspended_reason_v}' as last_suspended_reason) as src
-                                     on taskSt.created_on = src.created_on 
-                                       and taskSt.name = src.name 
-                                       and taskSt.schema_name = src.schema_name 
-                                       and taskSt.database_name = src.database_name 
-                                       and taskSt.state = src.state                       
-                                   when not MATCHED then insert  
-                                       (  created_on, database_name, schema_name , name , id , state , error_integration, 
-                                          schedule, owner , last_suspended_on , last_suspended_reason  )
-                                     values   
-                                       ( src.created_on, src.database_name, src.schema_name, src.name, src.id,  src.state, src.error_integration, 
-                                        src.schedule,  src.owner, src.last_suspended_on , src.last_suspended_reason )  ;     '''
-
-                session.sql(merge_sql_v).collect()
+    session = Session.builder.configs(connection_params).create()
+    return session 
 
 
-
-
-session = get_active_session()
+session = snowpark_session_create() 
 
 st.header(f" **:grey[CONFIGURATION]**")
 st.write("Before proceeding to review the analysis on **Summary**, **Task Cost** and **Health Check**; click **Configure & Run Analysis** button and configure the REAS TASK analyses app.")

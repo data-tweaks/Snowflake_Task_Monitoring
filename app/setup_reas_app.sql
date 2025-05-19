@@ -1,15 +1,10 @@
 
-create application role if not exists reas_app_role;
-
--- bu schema versiyon lu olmali mi olmamali mi ona bi bak  
---create or alter versioned schema core;
+create database if not exists taskMonitoring; 
+use database taskMonitoring; 
 create  schema if not exists core;
-grant usage on schema core to application role reas_app_role ; 
+use schema core;
 
-
-create  schema if not exists core;
-
-create or replace TABLE  CORE.TASK_RUN_HISTORY (
+create or replace TABLE TASK_RUN_HISTORY (
 	ROOT_TASK_NAME VARCHAR(180),
 	ROOT_TASK_ATTEMPT_NUMBER NUMBER(38,0),
 	ROOT_TASK_STATE VARCHAR(12),
@@ -56,7 +51,7 @@ create or replace TABLE  CORE.TASK_RUN_HISTORY (
 	QUERY_ID VARCHAR(100)
 );
  
-create or replace TABLE CORE.TASK_STATISTICS_TOP5 (
+create or replace TABLE TASK_STATISTICS_TOP5 (
 	CATEGORY VARCHAR(60),
 	ROOT_TASK_NAME VARCHAR(250),
 	TASK_NAME VARCHAR(250),
@@ -70,7 +65,7 @@ create or replace TABLE CORE.TASK_STATISTICS_TOP5 (
 	QUERY_ID VARCHAR(60)
 );
 
-create or replace TABLE CORE.TASK_STORAGE_SCAN_PERF_TOP5 (
+create or replace TABLE TASK_STORAGE_SCAN_PERF_TOP5 (
 	CATEGORY VARCHAR(30),
 	QUERY_TYPE VARCHAR(80),
 	ROOT_TASK VARCHAR(180),
@@ -82,7 +77,7 @@ create or replace TABLE CORE.TASK_STORAGE_SCAN_PERF_TOP5 (
 	IS_BYTES_SPILLED NUMBER(38,0)
 );
 
-create or replace TABLE CORE.TASK_WH_USAGE_PARAMETRIZED (
+create or replace TABLE TASK_WH_USAGE_PARAMETRIZED (
 	PARAMETER VARCHAR(60),
 	PERIOD_DT VARCHAR(50),
 	WAREHOUSE_NAME VARCHAR(80),
@@ -91,7 +86,7 @@ create or replace TABLE CORE.TASK_WH_USAGE_PARAMETRIZED (
 	CREDITS_USED NUMBER(38,6)
 );
 
-create or replace TABLE CORE.TASKS_FOR_HEALTH_CHECK (
+create or replace TABLE TASKS_FOR_HEALTH_CHECK (
 	TASK_NAME VARCHAR(180),
 	TASK_SCHEDULED_FROM VARCHAR(40),
 	WAREHOUSE_NAME VARCHAR(180),
@@ -100,14 +95,13 @@ create or replace TABLE CORE.TASKS_FOR_HEALTH_CHECK (
 	QUERY_ID VARCHAR(80)
 );
 
-create or replace TABLE CORE.WAREHOUSE_UTILIZATION_MONTHLY (
+create or replace TABLE WAREHOUSE_UTILIZATION_MONTHLY (
 	WAREHOUSE_NAME VARCHAR(180),
 	TOTAL_HOURS NUMBER(38,0),
 	TOTAL_IDLE_HOURS NUMBER(38,0)
 );
 
-
-create or replace TABLE CORE.QUERY_STATS (
+create or replace TABLE QUERY_STATS (
 	OPERATOR_TYPE VARCHAR(120),
 	TOTAL_TIME NUMBER(38,5),
 	INIT_TIME NUMBER(38,5),
@@ -131,7 +125,7 @@ create or replace TABLE CORE.QUERY_STATS (
 	QUERY_ID VARCHAR(16777216)
 );
 
-create or replace TABLE CORE.TASK_STATE (
+create or replace TABLE TASK_STATE (
 	CREATED_ON VARCHAR(100),
 	DATABASE_NAME VARCHAR(100),
 	SCHEMA_NAME VARCHAR(100),
@@ -145,16 +139,14 @@ create or replace TABLE CORE.TASK_STATE (
 	LAST_SUSPENDED_REASON VARCHAR(160)
 );
 
-
-create or replace TABLE CORE.TASKS_MISSED_EXECUTIONS (
+create or replace TABLE TASKS_MISSED_EXECUTIONS (
 	TASK_NAME VARCHAR(260),
 	SCHEDULED_TIME TIMESTAMP_LTZ(3),
 	STATE VARCHAR(12),
 	NEXT_SCHEDULED_TIME TIMESTAMP_LTZ(3)
 );
 
-
-create or replace procedure core.init_analyse()
+create or replace procedure init_analyse()
   returns varchar
   LANGUAGE SQL
  comment = 'Calculates statistics for the tasks '  
@@ -594,46 +586,4 @@ exception
 END;
 $$
 ;
-
-
--- Grant usage and permissions on objects
-grant usage on schema core to application role reas_app_role;
-grant usage on procedure core.init_analyse() to application role reas_app_role;
-grant usage on procedure core.INSERT_QUERY_STATS( varchar) to application role reas_app_role;
-grant select on all tables in schema core to application role reas_app_role;
-
--- creating schema for streamlit and reference update proc 
-create or alter versioned schema reas ; 
-
-grant usage on schema reas to application role reas_app_role;
-
-create or replace streamlit reas.task_monitoring 
-   from  '/streamlit'
-   MAIN_FILE = '/reas_task_monitor.py' ; 
-
--- streamlit grants 
-grant usage on streamlit reas.task_monitoring  to application role reas_app_role; 
---grant select on all tables in  schema reas to application role reas_app_role;
-
-CREATE or replace PROCEDURE reas.REGISTER_SINGLE_REFERENCE(ref_name STRING, operation STRING, ref_or_alias STRING)
-  RETURNS STRING
-  LANGUAGE SQL
-  AS $$
-    BEGIN
-      CASE (operation)
-        WHEN 'ADD' THEN
-          SELECT SYSTEM$ADD_REFERENCE(:ref_name, :ref_or_alias);
-        WHEN 'REMOVE' THEN
-          SELECT SYSTEM$REMOVE_REFERENCE(:ref_name, :ref_or_alias);
-        WHEN 'CLEAR' THEN
-          SELECT SYSTEM$REMOVE_ALL_REFERENCES(:ref_name);
-      ELSE
-        RETURN 'unknown operation: ' || operation;
-      END CASE;
-
-      RETURN NULL;
-    END;
-  $$;
-
-GRANT USAGE ON PROCEDURE reas.REGISTER_SINGLE_REFERENCE(STRING, STRING, STRING) TO APPLICATION ROLE reas_app_role;
 

@@ -1,0 +1,4 @@
+
+[taskMonitoring]
+warehouse = "compute_wh"
+role = "accountadmin"
