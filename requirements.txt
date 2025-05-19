@@ -1,7 +1,6 @@
 streamlit
 streamlit-extras
 pandas
-time
 plotly
 snowflake-snowpark-python 
 toml
