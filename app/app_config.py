@@ -46,7 +46,7 @@ def load_sql_file(file, session ):
 
   for statement in sql_statements:
       if statement.strip():
-          session.execute(statement)
+          session.sql(statement).collect()
   session.close()
 
 
