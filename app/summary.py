@@ -34,7 +34,7 @@ session = snowpark_session_create()
 
 def getTaskInfo(session): 
         
-        v_getsuspendedState = f''' select task_name, scheduled_time, state, next_scheduled_time from   core.tasks_missed_executions  ; '''
+        v_getsuspendedState = f''' select task_name, scheduled_time, state, next_scheduled_time from   taskmonitoring.core.tasks_missed_executions  ; '''
         suspended_df =  pd.DataFrame(session.sql(v_getsuspendedState).collect())
 
         #Header and explanation
