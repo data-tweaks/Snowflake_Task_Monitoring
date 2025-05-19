@@ -43,10 +43,13 @@ session = snowpark_session_create()
 def load_sql_file(file, session ):
   with open(file, 'r') as f:
       sql_statements = f.read().split(';')
-
-  for statement in sql_statements:
-      if statement.strip():
-          session.sql(statement).collect()
+  
+  if "$$" in sql_statements:
+        session.sql(sql_statements).collect()
+  else: 
+    for statement in sql_statements:
+        if statement.strip():
+            session.sql(statement).collect()
   session.close()
 
 
