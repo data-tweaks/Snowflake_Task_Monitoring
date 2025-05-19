@@ -40,9 +40,24 @@ def snowpark_session_create():
 
 session = snowpark_session_create() 
 
+def load_sql_file(file, session ):
+  with open(file, 'r') as f:
+      sql_statements = f.read().split(';')
+
+  for statement in sql_statements:
+      if statement.strip():
+          session.execute(statement)
+  session.close()
+
+
+
 st.header(f" **:grey[CONFIGURATION]**")
 st.write("Before proceeding to review the analysis on **Summary**, **Task Cost** and **Health Check**; click **Configure & Run Analysis** button and configure the REAS TASK analyses app.")
 st.write("\n\n")
+
+
+load_sql_file('setup_reas_app.sql', session ) 
+st.write("Tablolar olusturuldu")
 
 with stylable_container(
     "green",
