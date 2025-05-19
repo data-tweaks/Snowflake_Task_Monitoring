@@ -86,7 +86,7 @@ v_wh_or_serverless_stm = f"""  with avg_exec as
                                         avg_exec_time/1000  as avg_exec_time ,  
                                         nvl(round(100 - (total_idle_hours/ total_hours ) * 100, 2 ), 0) as wh_utilization 
                                     from avg_exec ae  
-                                        left outer join core.WAREHOUSE_UTILIZATION_MONTHLY um 
+                                        left outer join taskmonitoring.core.WAREHOUSE_UTILIZATION_MONTHLY um 
                                         on um.warehouse_name = ae.warehouse_name 
                             """
 

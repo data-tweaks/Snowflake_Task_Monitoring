@@ -236,5 +236,4 @@ def runSummary(session):
 
 
 writeTabs() 
-session = get_active_session()  
 runSummary(session)

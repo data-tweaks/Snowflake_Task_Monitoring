@@ -94,7 +94,7 @@ with stylable_container(
     # listing the privileges 
     container_config.write("**GRANTED PRIVILIGES ON APPLICATION:**")
     container_config.write("See more information on the link : https://data-tweaks.com/reas-task-monitoring/") 
-    priviliges_dt = pd.DataFrame( session.sql( 'SHOW PRIVILEGES IN APPLICATION REAS_TASK;' ).collect() ) 
+    priviliges_dt = pd.DataFrame( session.sql( 'SHOW WAREHOUSES;' ).collect() ) 
 
     if not priviliges_dt.empty: 
       priv_rownum = 0 
@@ -111,23 +111,23 @@ with stylable_container(
 
     container_config.write("**WAREHOUSES THAT ARE GRANTED MONITOR PRIVILIGES**")
     # Listing the grants on warehouses 
-    getAllWHJSON_dt = pd.DataFrame( session.sql(f" select SYSTEM$GET_ALL_REFERENCES('CONSUMER_WAREHOUSE' , True) as JSONTEXT " ).collect()) 
-    if not getAllWHJSON_dt.empty: 
-        jsonVal = getAllWHJSON_dt["JSONTEXT"][0]
+    #getAllWHJSON_dt = pd.DataFrame( session.sql(f" select SYSTEM$GET_ALL_REFERENCES('CONSUMER_WAREHOUSE' , True) as JSONTEXT " ).collect()) 
+    #if not getAllWHJSON_dt.empty: 
+    #    jsonVal = getAllWHJSON_dt["JSONTEXT"][0]
 
-        v_add_char_open = "{"
-        v_add_char_close = "}"
-        v_getWHstm_select  =  f'''SELECT  v.value:name::varchar   as v_warehouses  from (SELECT PARSE_JSON(column1) AS src FROM VALUES (' {v_add_char_open} "value":   ''' 
-        v_getWHstm_last = f'''  {v_add_char_close}' ) v ),   LATERAL FLATTEN(INPUT => SRC:value) v '''
-        v_getWHstm = f" {v_getWHstm_select}   {jsonVal}  {v_getWHstm_last}  " 
-        v_getWH = session.sql(v_getWHstm ).collect()
-        getWH  = pd.DataFrame(v_getWH)
+#        v_add_char_open = "{"
+#        v_add_char_close = "}"
+#        v_getWHstm_select  =  f'''SELECT  v.value:name::varchar   as v_warehouses  from (SELECT PARSE_JSON(column1) AS src FROM VALUES (' {v_add_char_open} "value":   ''' 
+#        v_getWHstm_last = f'''  {v_add_char_close}' ) v ),   LATERAL FLATTEN(INPUT => SRC:value) v '''
+#        v_getWHstm = f" {v_getWHstm_select}   {jsonVal}  {v_getWHstm_last}  " 
+#        v_getWH = session.sql(v_getWHstm ).collect()
+#        getWH  = pd.DataFrame(v_getWH)
 
-        row_iter = 0 
-        for rowWH in getWH.iterrows() :
-            wh_name = getWH["V_WAREHOUSES"][row_iter]
-            container_config.write( f" - {wh_name}  ")
-            row_iter = row_iter + 1 
+#        row_iter = 0 
+#        for rowWH in getWH.iterrows() :
+#            wh_name = getWH["V_WAREHOUSES"][row_iter]
+#            container_config.write( f" - {wh_name}  ")
+#            row_iter = row_iter + 1 
           
 
     container_config.divider()
@@ -144,24 +144,23 @@ with stylable_container(
  
     # running analyses 
     if run_button: 
-        #get_taskState_old(session) 
         with st.spinner(text="In progress"): 
           time.sleep(3)
           
           #getting ata from account_usage schema views 
-          v_run_analyse_proc = 'call CORE.INIT_ANALYSE() ; '
+          v_run_analyse_proc = 'call taskmonitoring.CORE.INIT_ANALYSE() ; '
           session.sql(v_run_analyse_proc).collect()
           container_config.write("**:blue[Analysis run for the last 3 months is completed. ]**")
           container_config.write("**:blue[Running query stats for the last 14 days now.]**")
 
           #truncating query_stat table before we continue with query stats 
-          session.sql('Truncate table core.QUERY_STATS ').collect()  ; 
+          session.sql('Truncate table taskmonitoring.core.QUERY_STATS ').collect()  ; 
 
           #running query_stats for each warehouse 
           i = 0 
           for row in getWH.iterrows() :
               wh_name = getWH["V_WAREHOUSES"][i]
-              v_run_query_stats_proc = f" call CORE.INSERT_QUERY_STATS(  '{wh_name}' ) ; "
+              v_run_query_stats_proc = f" call taskmonitoring.CORE.INSERT_QUERY_STATS(  '{wh_name}' ) ; "
               session.sql(v_run_query_stats_proc).collect()
               container_config.write( f" **:blue[- Stats run completed for WH: {wh_name}]** ")
               i = i + 1 
