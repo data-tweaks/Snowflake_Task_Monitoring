@@ -73,7 +73,7 @@ def getLongestCompilation(session):
                                     lower(root_task_scheduled_from) triggered_as, 
                                     to_varchar(task_run_dt, 'YYYY-MM-DD') as execution_dt, 
                                     task_state as status
-                                from  core.task_statistics_top5 
+                                from  taskmonitoring.core.task_statistics_top5 
                                 where category = 'Compilation time' order by compilation_time_in_sec desc ;  '''
         compl_df =  pd.DataFrame(session.sql(v_getLongestCompl).collect())
 
@@ -125,7 +125,7 @@ def getLongestExec(session):
                                     lower(root_task_scheduled_from) triggered_as, 
                                     to_varchar(task_run_dt, 'YYYY-MM-DD') as execution_dt, 
                                     task_state as status
-                                from  core.task_statistics_top5 
+                                from  taskmonitoring.core.task_statistics_top5 
                                 where category = 'Execution time' order by execution_time_in_sec desc ;  '''
         exec_df =  pd.DataFrame(session.sql(v_getLongestExec).collect())
         
@@ -172,7 +172,7 @@ def getScanStats(session):
                             to_varchar(performance_indicator) as performance_indicator , 
                             is_bytes_spilled , 
                             status 
-                        from core.task_storage_scan_perf_top5 ;    '''
+                        from taskmonitoring.core.task_storage_scan_perf_top5 ;    '''
         scan_df =  pd.DataFrame(session.sql(v_getScanStat).collect())        
         
         #Header and explanations 
