@@ -12,39 +12,24 @@ def writeTabs():
 
 
 
-def getTaskInfo_old(session): 
-        
-        v_getsuspendedState = f''' select lower(database_name || '.' || schema_name || '.' || name ) as task_name , 
-                        lower(owner) as owner,  
-                        lower(last_suspended_reason) suspend_reason ,  
-                        last_suspended_on as suspended_on , schedule 
-                        from core.TASK_STATE where lower(state) = 'suspended' ; '''
-        suspended_df =  pd.DataFrame(session.sql(v_getsuspendedState).collect())
+def snowpark_session_create(): 
+ 
+    config = toml.load("app/config/connections.toml")
+    connConfig = config["taskMonitoring"]
 
-        #Header and explanation
-        st.header(" :trackball: **:orange[SUSPENDED TASKS]**" )    
-        st.write(f" **List of serverless and warehouse suspended tasks.**") 
-    
-        container_taskStateSummary = st.container(border=True)
-        container_taskStateSummary.write("\n\n")
-        task_name, owner, suspended_on, suspended_reason, schedule  = container_taskStateSummary.columns(5 )
-        task_name.markdown('<p style="font-family: Helvetica, sans-serif;  font-weight: bold;"> Task</p>' ,  unsafe_allow_html=True)   
-        owner.markdown('<p style="font-family: Helvetica, sans-serif; font-weight: bold;"> Owner</p>',  unsafe_allow_html=True  ) 
-        suspended_on.markdown( '<p style="font-family: Helvetica, sans-serif;  font-weight: bold;"> Suspended On</p>',  unsafe_allow_html=True  ) 
-        suspended_reason.markdown(  '<p style="font-family: Helvetica, sans-serif; font-weight: bold;"> Reason</p>',  unsafe_allow_html=True  )
-        schedule.markdown( '<p style="font-family: Helvetica, sans-serif; font-weight: bold;"> Schedule Interval</p>',  unsafe_allow_html=True  ) 
+    connection_params = {
+        "user" : st.secrets["user"],   
+        "password": st.secrets["password"],
+        "account" : st.secrets["account"],
+        "warehouse" : connConfig.get("warehouse"),
+        "role" : connConfig.get("role"),
+    }
 
-        rownum_iter = 0 
+    session = Session.builder.configs(connection_params).create()
+    return session 
 
-        for row in suspended_df.iterrows():
-            task_name.markdown( suspended_df["TASK_NAME"][rownum_iter]) 
-            owner.markdown( suspended_df["OWNER"][rownum_iter]) 
-            suspended_on.markdown( suspended_df["SUSPENDED_ON"][rownum_iter]) 
-            suspended_reason.markdown( suspended_df["SUSPEND_REASON"][rownum_iter])
-            schedule.markdown( suspended_df["SCHEDULE"][rownum_iter]) 
-            rownum_iter  = rownum_iter +1 
-        
-        container_taskStateSummary.write("\n\n") 
+
+session = snowpark_session_create() 
 
 
 def getTaskInfo(session): 

@@ -44,16 +44,16 @@ st.write("**:blue[Insert database and task names below :]** ")
 
 left, right = st.columns(2)
 v_getDatabase_stm = f'''  select distinct th.database_name  
-                            from core.QUERY_STATS  st 
-                              inner join core.tasks_for_health_check th 
+                            from taskmonitoring.core.QUERY_STATS  st 
+                              inner join taskmonitoring.core.tasks_for_health_check th 
                                on st.query_id = th.query_id ;  '''
 databaseName_dt = pd.DataFrame(session.sql(v_getDatabase_stm).collect() )
 databaseName = left.selectbox("**Database name:** " , databaseName_dt)
 
 
 v_getTasks_stm = f'''  select distinct th.task_name  
-                       from core.QUERY_STATS  st 
-                         inner join core.tasks_for_health_check th 
+                       from taskmonitoring.core.QUERY_STATS  st 
+                         inner join taskmonitoring.core.tasks_for_health_check th 
                            on st.query_id = th.query_id 
                         where th.database_name = '{databaseName}'
                             order by 1 ;  '''
@@ -72,7 +72,7 @@ v_wh_or_serverless_stm = f"""  with avg_exec as
                                         count(*) exec_count, 
                                         lpad(month(to_date(TASK_QUERY_START_TIME)),2, '0')  || '-' ||  year(to_date(TASK_QUERY_START_TIME))  exec_month , 
                                         avg(TOTAL_ELAPSED_TIME) avg_exec_time  
-                                        from core.TASK_RUN_HISTORY 
+                                        from taskmonitoring.core.TASK_RUN_HISTORY 
                                         where task_name = '{taskName}' 
                                         group by lpad(month(to_date(TASK_QUERY_START_TIME)),2, '0')  || '-' ||  year(to_date(TASK_QUERY_START_TIME)) , 
                                         task_name , 
@@ -124,8 +124,8 @@ v_getDiagramStats_stm =  f'''  select st.query_id ,
                                     sum(nvl(st.remote_disk_io_time, 0)) as remote_disk_io_time, 
                                     sum(nvl(st.processing_time, 0)) processing_time , 
                                     sum(nvl(st.local_disk_io_time, 0)) local_disk_io_time                        
-                                from   core.QUERY_STATS  st 
-                                inner join core.tasks_for_health_check th 
+                                from   taskmonitoring.core.QUERY_STATS  st 
+                                inner join taskmonitoring.core.tasks_for_health_check th 
                                 on st.query_id = th.query_id 
                             where th.task_name = '{taskName}'
                                 group by  st.query_id , th.task_name ;  '''
@@ -182,8 +182,8 @@ v_analyseStat_stm = f'''  select st.query_id , th.task_name,
                                 tablename, 
                                 sortkeys , 
                                 additional_joincondition
-                        from   core.QUERY_STATS  st 
-                        inner join core.tasks_for_health_check th 
+                        from   taskmonitoring.core.QUERY_STATS  st 
+                        inner join taskmonitoring.core.tasks_for_health_check th 
                         on st.query_id = th.query_id 
                     where th.task_name = '{taskName}'
                             and st.total_time > 0 

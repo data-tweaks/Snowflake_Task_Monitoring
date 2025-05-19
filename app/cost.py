@@ -44,7 +44,7 @@ MonthlyChartContainer.write("\n\n")
 
 dt, text = MonthlyChartContainer.columns(2) 
 
-v_selectMonth = f'''  select distinct period_dt from  core.TASK_WH_USAGE_PARAMETRIZED where parameter = 'wh_monthly' ;  '''
+v_selectMonth = f'''  select distinct period_dt from  taskmonitoring.core.TASK_WH_USAGE_PARAMETRIZED where parameter = 'wh_monthly' ;  '''
 month_df = pd.DataFrame(session.sql(v_selectMonth).collect())
 
 if month_df.empty: 
@@ -54,7 +54,7 @@ else:
 text.write("\n\n")
 
 v_serverless_task_usage_stm = f'''  select  period_dt, credits_used 
-                                        from  core.TASK_WH_USAGE_PARAMETRIZED where parameter = 'Serverless'
+                                        from  taskmonitoring.core.TASK_WH_USAGE_PARAMETRIZED where parameter = 'Serverless'
                                         and  period_dt =  '{v_monthInput}' ;  ''' 
 
 serverless_task_usage_dt = pd.DataFrame(session.sql(v_serverless_task_usage_stm).collect())
@@ -67,7 +67,7 @@ else:
 
 
 v_wh_cost_stm = f'''  select  period_dt, warehouse_name,   sum(credits_used)  as credits_used 
-                        from  core.TASK_WH_USAGE_PARAMETRIZED
+                        from  taskmonitoring.core.TASK_WH_USAGE_PARAMETRIZED
                         where parameter = 'wh_monthly'
                             and period_dt = '{v_monthInput}'  
                         group by period_dt, warehouse_name ;  '''
@@ -105,7 +105,7 @@ chartContainer.write("**:grey[WAREHOUSE TOTAL CREDIT CONSUMPTION]**")
 whChart, whText  = chartContainer.columns(2)
 
 v_wh_cost_inMonths_stm = f''' select  period_dt,   sum(credits_used) as credits_used 
-                                from  core.TASK_WH_USAGE_PARAMETRIZED
+                                from  taskmonitoring.core.TASK_WH_USAGE_PARAMETRIZED
                                 where parameter = 'wh_monthly'
                                 group by period_dt  ;  '''
 
@@ -135,7 +135,7 @@ serverlessChart, serverlessText  = chartContainer.columns(2)
 serverlessText.write("Serverless compute resources are 1,5 times more expensive than standart warehouses. So serverless warehouses should be used for the tasks that have shorter execution times and for the tasks that have tendency to resume and suspend the warehouses constantly.")
 
 v_sless_cost_inMonths_stm = f''' select  period_dt, sum(credits_used) as  credits_used
-                                    from  core.TASK_WH_USAGE_PARAMETRIZED 
+                                    from  taskmonitoring.core.TASK_WH_USAGE_PARAMETRIZED 
                                 where parameter = 'Serverless'
                                 group by period_dt     
                                     order by 1 ; '''
@@ -167,7 +167,7 @@ defaultFromDate = pd.DataFrame(session.sql("select case when  date_trunc(month, 
 fromDate = fromDateCol.date_input("**From date:** " , pd.to_datetime(defaultFromDate["FROM_DATE"][0]))
 toDate = toDateCol.date_input("**To date:** ")
 
-v_getDatabaseName_stm = f'''select distinct database_name  from  core.TASK_WH_USAGE_PARAMETRIZED where parameter = 'wh_daily' and period_dt  between '{fromDate}' and '{toDate}' ;  '''
+v_getDatabaseName_stm = f'''select distinct database_name  from  taskmonitoring.core.TASK_WH_USAGE_PARAMETRIZED where parameter = 'wh_daily' and period_dt  between '{fromDate}' and '{toDate}' ;  '''
 
 getDBName_dt = session.sql(v_getDatabaseName_stm).collect()
 
@@ -177,7 +177,7 @@ leftTaskChart.write("**Select database and task:** ")
 dbName = leftTaskChart.selectbox("**Select database:** " , getDBName_dt)
 
 v_getTasks_stm = f''' select distinct task_name  
-                         from  core.TASK_WH_USAGE_PARAMETRIZED 
+                         from  taskmonitoring.core.TASK_WH_USAGE_PARAMETRIZED 
                        where parameter = 'wh_daily' and period_dt  between '{fromDate}' and '{toDate}' 
                             and database_name = '{dbName}' ;  '''
 
@@ -186,7 +186,7 @@ getTaskName_dt = session.sql(v_getTasks_stm).collect()
 taskName=  leftTaskChart.selectbox("**Select task:** " , getTaskName_dt)
 
 v_taskCostChart_stm = f'''   select period_dt,  task_name , sum(credits_used) as credits_used 
-                              from  core.TASK_WH_USAGE_PARAMETRIZED 
+                              from  taskmonitoring.core.TASK_WH_USAGE_PARAMETRIZED 
                             where parameter = 'wh_daily' and period_dt  between '{fromDate}' and '{toDate}' 
                               and database_name ='{dbName}'  and  task_name = '{taskName}' 
                               group by  task_name , period_dt ;  '''
