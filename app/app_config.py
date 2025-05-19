@@ -47,7 +47,6 @@ def load_Procedures_from_file(file, session ):
       session.sql(sql_statements).collect()
   except Exception as e:
       st.error(f"Error executing SQL file: {e}")
-  session.close()
 
 def load_sql_file(file, session  ):
     with open(file, 'r') as f:
@@ -56,7 +55,6 @@ def load_sql_file(file, session  ):
     for statement in sql_statements:
         if statement.strip():
             session.sql(statement).collect()
-    session.close()
   
 
 st.header(f" **:grey[CONFIGURATION]**")
