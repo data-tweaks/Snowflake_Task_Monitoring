@@ -1,7 +1,9 @@
 import streamlit as st
-from snowflake.snowpark.context import get_active_session
-import pandas as pd 
+from snowflake.snowpark.session import Session 
 
+import pandas as pd  
+import toml
+import os
 
 def writeTabs():
     st.write("\n\n")

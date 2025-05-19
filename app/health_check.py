@@ -1,17 +1,36 @@
 # Import python packages
 import streamlit as st
-from snowflake.snowpark.context import get_active_session
+from snowflake.snowpark.session import Session 
 from streamlit_extras.stylable_container import stylable_container
-import pandas as pd 
 import plotly.express as px
 
+import pandas as pd 
+import toml
+import os
 
 
 def tabs():
     st.write("\n\n")
     st.write("\n\n")
 
-session = get_active_session()
+def snowpark_session_create(): 
+ 
+    config = toml.load("app/config/connections.toml")
+    connConfig = config["taskMonitoring"]
+
+    connection_params = {
+        "user" : st.secrets["user"],   
+        "password": st.secrets["password"],
+        "account" : st.secrets["account"],
+        "warehouse" : connConfig.get("warehouse"),
+        "role" : connConfig.get("role"),
+    }
+
+    session = Session.builder.configs(connection_params).create()
+    return session 
+
+
+session = snowpark_session_create() 
 
 
 tabs()

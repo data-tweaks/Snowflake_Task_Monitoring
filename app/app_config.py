@@ -24,7 +24,7 @@ st.markdown(page_element, unsafe_allow_html=True)
 def snowpark_session_create(): 
  
     config = toml.load("app/config/connections.toml")
-    connConfig = config["aiGround"]
+    connConfig = config["taskMonitoring"]
 
     connection_params = {
         "user" : st.secrets["user"],   

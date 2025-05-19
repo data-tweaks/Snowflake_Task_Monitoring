@@ -1,10 +1,28 @@
 import streamlit as st 
-from snowflake.snowpark.context import get_active_session
+from snowflake.snowpark.session import Session 
 import pandas as pd 
+import toml
+import os
 
 
+def snowpark_session_create(): 
+ 
+    config = toml.load("app/config/connections.toml")
+    connConfig = config["taskMonitoring"]
 
-session = get_active_session()
+    connection_params = {
+        "user" : st.secrets["user"],   
+        "password": st.secrets["password"],
+        "account" : st.secrets["account"],
+        "warehouse" : connConfig.get("warehouse"),
+        "role" : connConfig.get("role"),
+    }
+
+    session = Session.builder.configs(connection_params).create()
+    return session 
+
+
+session = snowpark_session_create() 
 
 def tabs(): 
     st.write("\n\n")
